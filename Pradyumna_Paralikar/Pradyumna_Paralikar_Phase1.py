@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[40]:
+
+
 import quandl as Quandl, math
 import numpy as np
 import pandas as pd
@@ -7,31 +13,35 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import datetime
 
+plt.style.use('seaborn-darkgrid')
+plt.rc('figure', figsize=(16,10))
+plt.rc('lines', markersize=4)
+
 style.use('ggplot')
 
 #Use Pandas to populate the data frame
-df = Quandl.get("WIKI/AMZN",api_key='yN6gWxePyMHXXqxC-xb7')
-print("Printing data frame of WIKI/AMZN...")
-print(df)
-print("End")
-df = df[['Adj. Open',  'Adj. High',  'Adj. Low',  'Adj. Close', 'Adj. Volume', 'Ex-Dividend']]
+df = Quandl.get("WIKI/AMZN",api_key='mV5HSee72qiLKj3WsLJ7')
+#print (df.head())
+
+df = pd.DataFrame(df, columns=['Ex-Dividend', 'Adj. Open',  'Adj. High',  'Adj. Low',  'Adj. Close', 'Adj. Volume', 'High', 'Low'])
 #Calculate percentages
-print("Printing Adj only...")
-print(df)
-print("End")
-df['HL_PCT'] = ((df['Adj. High'] - df['Adj. Low']) / df['Adj. Low']) * 100.0
-df['PCT_change'] = ((df['Adj. Close'] - df['Adj. Open']) / df['Adj. Close']) * 100.0
+df['HL_PCT'] = (df['Adj. High'] - df['Adj. Low']) / df['Adj. Low'] * 100.0
+df['PCT_change'] = (df['Adj. Close'] - df['Adj. Open']) / df['Adj. Open'] * 100.0
+df['Mid_Price'] = (df['Adj. High'] + df['Adj. Low']) / 2
+
 
 #Predict closing values
-df = df[['Adj. Close', 'HL_PCT', 'PCT_change', 'Adj. Volume', 'Ex-Dividend']]
+df = df[['Ex-Dividend', 'Adj. Close', 'HL_PCT', 'PCT_change', 'Adj. Volume', 'Mid_Price']]
+
+#df = df[['Adj. Close', 'Mid_Price', 'Adj. Volume']]
 forecast_col = 'Adj. Close'
 
 #Replace any NAN so that data is not lost
-df.fillna(method="ffill", inplace=True)
-df.fillna(method="bfill", inplace=True)
-df.fillna(value=0, inplace=True)
+df.fillna(value=-99999, inplace=True)
 forecast_out = int(math.ceil(0.001 * len(df)))
+print ("forecast_out: " + str(forecast_out))
 df['label'] = df[forecast_col].shift(-forecast_out)
+#print (df)
 
 # X is the input data and excludes labels to be predicted
 X = np.array(df.drop(['label'], 1))
@@ -78,3 +88,10 @@ plt.show()
 import pickle
 with open('linearregression.pickle','wb') as f:
     pickle.dump(clf, f)
+
+
+# In[ ]:
+
+
+
+
